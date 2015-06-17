@@ -8,26 +8,57 @@
 (function(){
     //间接引用,提高性能
     var document = window.document;
+
+    var element = "element", originalValue = "originalValue";
+
     //数据绑定对象
     var dataBind = {
-        callBacks:{},
+        bindData:{},
 
-        //bind:function(){
-        //
-        //},
-
+        relate:function(bindRule, value) {
+           var target = this.bindData[bindRule];
+           if(target){
+               var originalValue = target[originalValue];
+               target[element].innerHTML = originalValue.replace(bindRule,value);
+           }
+        }
 
         },
         bind=function(eve){
-           var val = this.getAttribute(attrName);
+           var attrName = this.getAttribute(attrName);
+           var value = this.value;
            //搜索页面内容，与页面中包含该值的上层元素建立绑定关系
+           var rule = bindRule(attrName);//待绑定值
+           var rightContent = document.querySelector("#rightContent");
+           //var childs = rightContent.childNodes;
+           findElement(rightContent,rule);
+            dataBind.relate(rule,value);
+        },
+
+        bindRule=function(attrName){
+            return "{{"+attrName+"}}";
+        },
+        findElement = function(parentEle, valRule){
+            console.log(parentEle)
+            if(parentEle.nodeType==1){
+                var nodes = parentEle.childNodes;
+                console.log(nodes)
+                for(var i= 0, len = nodes.length;i<len;i++){
+                    findElement(nodes[i],valRule);
+                }
+            }
+            var val = parentEle.innerHTML;
+            if(val && val.indexOf(valRule) >-1 && dataBind.bindData[valRule]){
+                dataBind.bindData[valRule] = {
+                    originalValue:val,
+                    element : parentEle
+                }
+                console.log(dataBind);
+            }
 
         },
-        bindRule=function(val){
-            return "{{"+val+"}}";
-        },
     //input要绑定的初始值
-    attrName = "mts-bind-value";
+    attrName = "mt-bind-value",
     //页面初始化方法
     init = function(evt){
        var inputs = document.querySelectorAll("input");
@@ -41,9 +72,7 @@
         }
     };
 
-    window.onload(function(){
-        init();
-    });
+    window.onload=init();
 
 
 })();
