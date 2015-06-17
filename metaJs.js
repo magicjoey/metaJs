@@ -3,10 +3,9 @@
  * @author Magic Joey @MetaStudio
  * @version metaJs.java 1.0 Created@2015-06-16 23:06 $
  */
-//严格模式,检查错误
 "use strict";
 (function(){
-    //间接引用,提高性能
+
     var document = window.document;
 
     var element = "element", originalValue = "originalValue";
