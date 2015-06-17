@@ -4,15 +4,114 @@
     <meta charset="UTF-8">
     <title>MetaJs测试页面</title>
     <link rel="stylesheet" href="css/qunit-1.18.0.css"/>
+    <link rel='stylesheet' href='css/shCore.css'/>
+    <link rel='stylesheet' href='css/shThemeDefault.css'/>
 </head>
 <body>
 
-<input type="text" mt-bind-value="HelloMeta"/>
+渠道编号:<input type="text" mt-bind-value="FundChannelCode"/>
 
 <div id="rightContent">
-    <span>Yep!{{HelloMeta}}</span>
+    <pre class="brush: sql">
+        -- 工商银行-B2B-同行对公 -初始化脚本
+alter session set nls_language='AMERICAN';
+alter session set nls_territory='AMERICA';
+
+-- 工商银行API_NO_MODE_ID
+define api_no_mode_id_out=147;
+
+define channel_code= '''{{FundChannelCode}}''';
+define channel_name= '''工商出款-批量-同行对私''';
+define channel_desc= '''工商银行''';
+define inst_code= '''ICBC''';
+define channel_mode='''02''';
+define channel_max_lmt=999999999.99;
+define channel_min_lmt=0.00;
+
+define api_code='''{{FundChannelCode}}';
+
+define api_type_bp='BP''';
+define api_type_bq='BQ''';
+
+define flag='-';
+define access_channel='''WEB''';
+define companyOrPersonal='''C''';
+
+--/** func */
+--define api_uri_batch='''http://10.65.209.17:9020/b2bicbc/services/batchapply''';
+--/** prod */
+define api_uri_batch='''http://bcss.whintra.com/b2bicbc/services/batchapply''';
+
+--删除脚本
+--delete from cmf.tm_fund_channel where FUND_CHANNEL_CODE=&channel_code;
+        --delete from cmf.tm_fund_channel_api where FUND_CHANNEL_CODE=&channel_code;
+        --delete from cmf.tm_route_rule_factor where FUND_CHANNEL_CODE=&channel_code;
+        --delete from cmf.tr_fc_target_inst_relation where FUND_CHANNEL_CODE=&channel_code;
+        --delete from cmf.tm_fund_channel_ext where FUND_CHANNEL_CODE=&channel_code;
+        --delete from cmf.tm_api_result_code where FUND_CHANNEL_CODE=&channel_code;
+        --delete from cmf.tm_fund_channel_settle where FUND_CHANNEL_CODE=&channel_code;
+        --delete from cmf.tm_api_amount_limit where API_CODE like &channel_code||'%';
+
+
+--渠道银企直连 支付为SP
+insert into cmf.tm_api_amount_limit (LIMIT_ID, API_CODE, DBCR, INST_CODE, MIN_AMOUNT, MAX_AMOUNT, FACE_LIMIT, MATCH_CONDITION, SHOW_EXPRESSION, GMT_CREATE, GMT_MODIFIED)
+values (cmf.seq_limit_id.nextVal, &api_code&flag&api_type_bp,null,null, &channel_min_lmt, &channel_max_lmt, '', '', '', sysdate, sysdate);
+
+insert into cmf.tm_fund_channel (FUND_CHANNEL_CODE, NAME, DESCRIPTION, INST_CODE, BIZ_TYPE, PAY_MODE, SIGNED_CROP, STATUS, VALID_FROM, VALID_TO, MAX_AMOUNT, MIN_AMOUNT, EXPECT_ARRIVE_TIME, GMT_CREATE, GMT_MODIFIED, MEMO, CHANNEL_MODE, PRIORITY)
+values (&channel_code, &channel_name, &channel_desc, &inst_code, 'O', 'BALANCE', 'S', 'INVALID', sysdate, sysdate, &channel_max_lmt,&channel_min_lmt, 'T+15M', '18-MAR-11 04.47.34.833000 PM', '18-MAR-11 04.47.34.833000 PM', '', &channel_mode, 50);
+
+
+--根据实际情况做相应修改
+insert into cmf.tm_fund_channel_api (API_CODE, FUND_CHANNEL_CODE, API_TYPE, API_VERSION, API_METHOD, API_URI, API_PRIORITY, SECURE, MAX_ITEM, COMM_TITLE_TEMPLATE, COMM_CONTENT_TEMPLATE, CHECK_PARSE_SCRIPT, RESULT_PARSE_SCRIPT, NEED_CONFIRM, ENABLE, GMT_CREATE, GMT_MODIFIED, MEMO, API_NO_MODE_ID, API_SECURITY_ID, CONSUME_TIME, FILE_TYPE, FILE_PATH, API_NAME, NEED_SYNC_GLIDE, EXTENSION)
+values (&api_code&flag&api_type_bp, &channel_code, 'BP', '1.0', 'MULE',&api_uri_batch, 40, 'N', null, '', '', null, null, 'N', 'Y', sysdate, sysdate, '', &api_no_mode_id_out, null, null, '', '', '', 'Y', 'notValidateAmount=true;isSynchronized=false;notSupportSplit=true;');
+
+insert into cmf.tm_fund_channel_api (API_CODE, FUND_CHANNEL_CODE, API_TYPE, API_VERSION, API_METHOD, API_URI, API_PRIORITY, SECURE, MAX_ITEM, COMM_TITLE_TEMPLATE, COMM_CONTENT_TEMPLATE, CHECK_PARSE_SCRIPT, RESULT_PARSE_SCRIPT, NEED_CONFIRM, ENABLE, GMT_CREATE, GMT_MODIFIED, MEMO, API_NO_MODE_ID, API_SECURITY_ID, CONSUME_TIME, FILE_TYPE, FILE_PATH, API_NAME, NEED_SYNC_GLIDE, EXTENSION)
+values (&api_code&flag&api_type_bq, &channel_code, 'BQ', '1.0', 'MULE', &api_uri_batch, 60, 'N', null, '', '', null, null, 'N', 'Y', sysdate, sysdate, '', null, null, null, '', '', '', 'N', 'queryTimeFence=20;notValidateAmount=true;queryDuration=60;');
+
+insert into cmf.tm_route_rule_factor (FACTOR_ID, FACTOR_NAME, FACTOR_WEIGHT, EXPRESSION_TYPE, EXPRESSION_CONTENT, GMT_CREATE, GMT_MODIFIED, MEMO, FACTOR_CODE, FUND_CHANNEL_CODE)
+values (cmf.seq_tm_route_rule_factor.Nextval, '网银渠道成本要素', 50, 'V', '75', sysdate, sysdate, '', 'ONLINE_BANK_COST', &channel_code);
+
+insert into cmf.tr_fc_target_inst_relation (ID, FUND_CHANNEL_CODE, TARGET_INST_CODE) values (cmf.seq_tr_fc_target_inst_relation.Nextval, &channel_code, &inst_code);
+
+
+insert into cmf.tm_fund_channel_ext (EXT_ID, FUND_CHANNEL_CODE, ATTR_KEY, ATTR_VALUE, ATTR_TYPE, VALUE_TYPE, VALUE_SPLIT, GMT_CREATE, GMT_MODIFIED, MEMO,need_match,match_type)
+values (cmf.seq_tm_fund_channel_ext.Nextval, &channel_code, 'companyOrPersonal', &companyOrPersonal, 'N', 'String', ',', sysdate, sysdate, '','Y','in');
+
+insert into cmf.tm_fund_channel_ext (EXT_ID, FUND_CHANNEL_CODE, ATTR_KEY, ATTR_VALUE, ATTR_TYPE, VALUE_TYPE, VALUE_SPLIT, GMT_CREATE, GMT_MODIFIED, MEMO,need_match,match_type)
+values (cmf.seq_tm_fund_channel_ext.Nextval, &channel_code, 'accessChannel', &access_channel, 'N', 'String', ',', sysdate, sysdate, '','Y','in');
+
+insert into cmf.tm_fund_channel_ext (EXT_ID, FUND_CHANNEL_CODE, ATTR_KEY, ATTR_VALUE, ATTR_TYPE, VALUE_TYPE, VALUE_SPLIT, GMT_CREATE, GMT_MODIFIED, MEMO,need_match,match_type)
+values (cmf.seq_tm_fund_channel_ext.Nextval, &channel_code, 'cardType', 'CC,DC,PB', 'N', 'String', ',', sysdate, sysdate, '','Y','in');
+
+
+--根据银行返回码新增--BP
+insert into cmf.tm_api_result_code (API_RESULT_CODE_ID, FUND_CHANNEL_CODE, API_TYPE, RESULT_CODE, RESULT_SUB_CODE, UNITY_RESULT_CODE, ORDER_STATUS, USE_MAPPING, GMT_CREATE, GMT_MODIFIED) values (cmf.seq_api_result_code.nextval, &channel_code, 'BP','7','0','S0001','S','Y',sysdate,sysdate);
+insert into cmf.tm_api_result_code (API_RESULT_CODE_ID, FUND_CHANNEL_CODE, API_TYPE, RESULT_CODE, RESULT_SUB_CODE, UNITY_RESULT_CODE, ORDER_STATUS, USE_MAPPING, GMT_CREATE, GMT_MODIFIED) values (cmf.seq_api_result_code.nextval, &channel_code, 'BP','7','','S0001','S','Y',sysdate,sysdate);
+insert into cmf.tm_api_result_code (API_RESULT_CODE_ID, FUND_CHANNEL_CODE, API_TYPE, RESULT_CODE, RESULT_SUB_CODE, UNITY_RESULT_CODE, ORDER_STATUS, USE_MAPPING, GMT_CREATE, GMT_MODIFIED) values (cmf.seq_api_result_code.nextval, &channel_code, 'BP','0','','S0002','A','Y',sysdate,sysdate);
+insert into cmf.tm_api_result_code (API_RESULT_CODE_ID, FUND_CHANNEL_CODE, API_TYPE, RESULT_CODE, RESULT_SUB_CODE, UNITY_RESULT_CODE, ORDER_STATUS, USE_MAPPING, GMT_CREATE, GMT_MODIFIED) values (cmf.seq_api_result_code.nextval, &channel_code, 'BP','9','','S0002','A','Y',sysdate,sysdate);
+--重复发送配置为处理中
+insert into cmf.tm_api_result_code (API_RESULT_CODE_ID, FUND_CHANNEL_CODE, API_TYPE, RESULT_CODE, RESULT_SUB_CODE, UNITY_RESULT_CODE, ORDER_STATUS, USE_MAPPING, GMT_CREATE, GMT_MODIFIED) values (cmf.seq_api_result_code.nextval, &channel_code,'BP','B0012','','S0002','A','Y',sysdate,sysdate);
+
+--查询无条件记录，配置为不存在，后续做补发
+insert into cmf.tm_api_result_code (API_RESULT_CODE_ID, FUND_CHANNEL_CODE, API_TYPE, RESULT_CODE, RESULT_SUB_CODE, UNITY_RESULT_CODE, ORDER_STATUS, USE_MAPPING, GMT_CREATE, GMT_MODIFIED) values (cmf.seq_api_result_code.nextval, &channel_code,'BQ','B0116','','S0002','N','Y',sysdate,sysdate);
+
+insert into cmf.tm_api_result_code (API_RESULT_CODE_ID, FUND_CHANNEL_CODE, API_TYPE, RESULT_CODE, RESULT_SUB_CODE, UNITY_RESULT_CODE, ORDER_STATUS, USE_MAPPING, GMT_CREATE, GMT_MODIFIED) values (cmf.seq_api_result_code.nextval, &channel_code,'BQ','7','','S0001','S','Y',sysdate,sysdate);
+insert into cmf.tm_api_result_code (API_RESULT_CODE_ID, FUND_CHANNEL_CODE, API_TYPE, RESULT_CODE, RESULT_SUB_CODE, UNITY_RESULT_CODE, ORDER_STATUS, USE_MAPPING, GMT_CREATE, GMT_MODIFIED) values (cmf.seq_api_result_code.nextval, &channel_code,'BQ','7','0','S0001','S','Y',sysdate,sysdate);
+--帐号错误配置为失败
+insert into cmf.tm_api_result_code (API_RESULT_CODE_ID, FUND_CHANNEL_CODE, API_TYPE, RESULT_CODE, RESULT_SUB_CODE, UNITY_RESULT_CODE, ORDER_STATUS, USE_MAPPING, GMT_CREATE, GMT_MODIFIED) values (cmf.seq_api_result_code.nextval, &channel_code,'BQ','6','RJ01','F0105','F','Y',sysdate,sysdate);
+--
+update cmf.tm_fund_channel t set t.valid_from = sysdate ,t.valid_to = to_Date('20991212','yyyyMMdd') where t.fund_channel_code =&channel_code;
+
+    </pre>
+
+
 </div>
 
+<script src='js/shCore.js' type="text/javascript"></script>
+<script src='js/shBrushSql.js' type="text/javascript"></script>
+<script>
+    SyntaxHighlighter.all();
+</script>
 <script type="text/javascript" src="metaJs.js"></script>
 <script src="js/qunit-1.18.0.js"></script>
 
