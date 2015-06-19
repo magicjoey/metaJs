@@ -9,21 +9,38 @@
 </head>
 <body>
 
+<p>
 渠道编号:<input type="text" mt-bind-value="FundChannelCode"/>
+</p>
+<p>
+    订单号生成规则:<input type="number" mt-bind-value="ApiNoModeId"/>
+</p>
+<p>
+    渠道描述:<input type="text" mt-bind-value="FundChannelDesc"/>
+</p>
+<p>
+    目标机构:<input type="text" mt-bind-value="InstCode"/>
+</p>
+<p>
+    服务地址:<input type="text" mt-bind-value="ServiceAddress"/>
+</p>
+<p>
+    服务名称:<input type="text" mt-bind-value="ServiceName"/>
+</p>
 
 <div id="rightContent">
-    <pre class="brush: sql;">
-        -- 工商银行-B2B-同行对公 -初始化脚本
+    <pre class="brush: sql;auto-links:false;">
+        -- {{FundChannelDesc}}
 alter session set nls_language='AMERICAN';
 alter session set nls_territory='AMERICA';
 
 -- 工商银行API_NO_MODE_ID
-define api_no_mode_id_out=147;
+define api_no_mode_id_out={{ApiNoModeId}};
 
 define channel_code= '''{{FundChannelCode}}''';
-define channel_name= '''工商出款-批量-同行对私''';
+define channel_name= '''{{FundChannelDesc}}''';
 define channel_desc= '''工商银行''';
-define inst_code= '''ICBC''';
+define inst_code= '''{{InstCode}}''';
 define channel_mode='''02''';
 define channel_max_lmt=999999999.99;
 define channel_min_lmt=0.00;
@@ -38,9 +55,9 @@ define access_channel='''WEB''';
 define companyOrPersonal='''C''';
 
 --/** func */
---define api_uri_batch='''http://10.65.209.17:9020/b2bicbc/services/batchapply''';
+--define api_uri_batch='''http://{{ServiceAddress}}/{{ServiceName}}/services/batchapply''';
 --/** prod */
-define api_uri_batch='''http://bcss.whintra.com/b2bicbc/services/batchapply''';
+define api_uri_batch='''http://bcss.whintra.com/{{ServiceName}}/services/batchapply''';
 
 --删除脚本
 --delete from cmf.tm_fund_channel where FUND_CHANNEL_CODE=&channel_code;
