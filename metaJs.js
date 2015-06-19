@@ -4,7 +4,7 @@
  * @version metaJs.java 1.0 Created@2015-06-16 23:06 $
  */
 "use strict";
-(function(){
+(function(window){
 
     var document = window.document;
 
@@ -12,7 +12,7 @@
 
     //数据绑定对象
     var dataBind = {
-            //结构为:bindData:{"bindKey":[{"element":"ele","originalValue":"val"},{"element":"ele2","originalValue":"val2"}...]}
+        //结构为:bindData:{"bindKey":[{"element":"ele","originalValue":"val"},{"element":"ele2","originalValue":"val2"}...]}
         bindData:{},
 
         relate:function(bindRule, value) {
@@ -27,7 +27,7 @@
            }
         },
         //绑定回调，执行如增加删除节点操作
-        callback:function(){
+        callback:{
 
         }
 
@@ -92,4 +92,4 @@
     window.onload=init();
 
 
-})();
+})(window);
