@@ -28,6 +28,10 @@
     服务名称:<input type="text" mt-bind-value="ServiceName"/>
 </p>
 
+<p>
+    <input type="checkbox" id="justCheck" mt-bind-operate="tm_fund_channel_api"/> <label for="justCheck">增加接口</label>
+</p>
+
 <div id="rightContent">
     <pre class="brush: sql;auto-links:false;">
         -- {{FundChannelDesc}}
@@ -131,6 +135,19 @@ update cmf.tm_fund_channel t set t.valid_from = sysdate ,t.valid_to = to_Date('2
 </script>
 <script type="text/javascript" src="metaJs.js"></script>
 <script src="js/qunit-1.18.0.js"></script>
+
+
+<script type="text/javascript">
+    window.onload=function() {
+        var key = "cmf.tm_fund_channel_api";
+        var par = document.getElementById("rightContent");
+        findElement(par, key);
+        var eleArray = dataBind.bindData[key];
+        console.log(eleArray);
+        var lastElement = eleArray[eleArray.length-1]["element"];
+        console.log(lastElement);
+    }
+</script>
 
 </body>
 </html>

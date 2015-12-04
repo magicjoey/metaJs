@@ -10,7 +10,7 @@
 
     var element = "element", originalValue = "originalValue";
 
-    //数据绑定对象
+    //双向数据绑定，数据绑定对象
     var dataBind = {
         //结构为:bindData:{"bindKey":[{"element":"ele","originalValue":"val"},{"element":"ele2","originalValue":"val2"}...]}
         bindData:{},
@@ -72,6 +72,25 @@
                 findElement(nodes[i],valRule);
             }
         },
+        findUpperAndSameLevel = function(ele,target){
+            if(ele.childNodes.length==1&&parentEle.childNodes[0].nodeType===3){
+                var val = parentEle.innerHTML;
+
+                if(val && val.indexOf(valRule) >-1 ){
+
+                    if(!dataBind.bindData[valRule]){
+                        dataBind.bindData[valRule] = [];
+                    }
+                }
+                return;
+            }
+            var nodes = parentEle.parentNode;
+            //console.log(nodes)
+            for(var i= 0, len = nodes.length;i<len;i++){
+                findElement(nodes[i],valRule);
+            }
+
+        },
     //input要绑定的初始值
     bindAttrName = "mt-bind-value",
     //页面初始化方法
@@ -90,6 +109,9 @@
     };
 
     window.onload=init();
+
+    window.findElement = findElement;
+    window.dataBind = dataBind;
 
 
 })(window);
